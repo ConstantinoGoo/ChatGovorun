@@ -18,6 +18,8 @@ sdist/
 var/
 wheels/
 *.egg-info/
+.env
+venv/
 .installed.cfg
 *.egg
 
@@ -38,4 +40,4 @@ ENV/
 
 # Logs
 *.log
-logs/ 
+logs/
