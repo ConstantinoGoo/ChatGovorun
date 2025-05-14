@@ -64,7 +64,8 @@ class YandexGPTBase:
                     data = await resp.json()
                     return data['id']
                 else:
-                    raise Exception(f"Failed to send async request, status code: {resp.status}")
+                    error_text = await resp.text()
+                    raise Exception(f"Failed to send async request, status code: {resp.status}, response: {error_text}")
 
     @staticmethod
     async def poll_async_completion(

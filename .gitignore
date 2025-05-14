@@ -41,3 +41,10 @@ ENV/
 # Logs
 *.log
 logs/
+
+# Jupyter Notebooks
+notebooks/
+*.ipynb_checkpoints
+
+# Docs build
+docs/build/
