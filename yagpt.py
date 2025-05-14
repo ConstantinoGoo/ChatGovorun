@@ -29,11 +29,14 @@ class YandexGPTClient:
         self.client = YandexGPT(config_manager=config)
         
     async def get_response(self, message_text):
+        logging.info(f"Entering get_response with message_text: '{message_text}'")
         try:
             # Формат сообщений для новой библиотеки
             messages = [{"role": "user", "text": message_text}]
+            logging.info(f"Preparing to call YandexGPT with messages: {messages}")
             # Вызов нового метода для получения ответа
             completion = await self.client.get_async_completion(messages=messages)
+            logging.info(f"Raw completion object from YandexGPT: {completion}") # Логируем сырой ответ
             # Извлечение текста ответа
             # Структура ответа может отличаться, нужно проверить документацию или примеры
             # Предполагаем, что ответ находится в completion.choices[0].message.text или аналогично
@@ -54,7 +57,29 @@ class YandexGPTClient:
             # Если `get_async_completion` возвращает строку напрямую, то это будет работать.
             # Если это объект, то нужно будет адаптировать.
             # Судя по коду SDK (если заглянуть внутрь), get_async_completion возвращает строку.
-            return completion
+            # logging.info(f"YandexGPT completion object: {completion}") # Уже залогировано выше как Raw completion object
+            logging.info(f"YandexGPT completion type: {type(completion)}")
+            # Попробуем извлечь текст ответа, предполагая, что completion - это объект
+            try:
+                if hasattr(completion, 'result') and completion.result and hasattr(completion.result, 'alternatives') and completion.result.alternatives:
+                    response_text = completion.result.alternatives[0].message.text
+                    logging.info(f"Extracted response text: {response_text}")
+                    return response_text
+                elif isinstance(completion, str):
+                    logging.info("Completion is a string, returning directly.")
+                    return completion
+                else:
+                    logging.warning("Unexpected completion object structure. Returning raw completion.")
+                    return str(completion) # Возвращаем строковое представление, если структура неизвестна
+            except AttributeError as ae:
+                logging.error(f"AttributeError while accessing completion parts: {ae}. Completion object: {completion}")
+                # Если это строка, вернем ее. Иначе, проблема.
+                if isinstance(completion, str):
+                    return completion
+                return "Ошибка извлечения текста из ответа YandexGPT."
+            except Exception as ex:
+                logging.error(f"Unexpected error while processing completion: {ex}. Completion object: {completion}")
+                return "Неожиданная ошибка при обработке ответа YandexGPT."
         except Exception as e:
-            logging.error(f"Ошибка при получении ответа от YandexGPT: {e}")
+            logging.error(f"Ошибка при вызове или первоначальной обработке ответа от YandexGPT: {e}", exc_info=True)
             return "Произошла ошибка при обработке вашего запроса к YandexGPT."

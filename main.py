@@ -52,16 +52,29 @@ async def start(update: Update, context):
 
 # Обработка сообщений
 async def handle_message(update: Update, context):
+    logging.info(f"Received message from Telegram: {update.message.text}")
     if not yagpt_client:
+        logging.error("yagpt_client is not initialized in handle_message.")
         await update.message.reply_text("Клиент YandexGPT не инициализирован. Проверьте настройки.")
         return
     message = update.message.text
+    logging.info(f"Sending message to YandexGPT: '{message}'")
     response = await yagpt_client.get_response(message)
+    logging.info(f"Received response from YandexGPT: '{response}'")
     await update.message.reply_text(response)
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv() # Загрузка переменных окружения из .env файла
 
 def main():
     # Ваш токен Telegram бота
-    token = 'YOUR_TELEGRAM_BOT_TOKEN'
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    
+    if not token:
+        print("Ошибка: TELEGRAM_BOT_TOKEN не найден. Убедитесь, что он задан в .env файле.")
+        return
     
     # Создание приложения
     application = Application.builder().token(token).build()
@@ -96,5 +109,5 @@ async def test_yagpt_connection():
 if __name__ == '__main__':
     # Для тестирования соединения с YandexGPT, раскомментируйте следующую строку
     # и закомментируйте main():
-    # main()
-    asyncio.run(test_yagpt_connection())
+    main()
+    # asyncio.run(test_yagpt_connection())
